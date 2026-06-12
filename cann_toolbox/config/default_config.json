@@ -1,0 +1,20 @@
+{
+  "board": {
+    "host": "192.168.0.2",
+    "port": 22,
+    "user": "HwHiAiUser",
+    "password": "",
+    "remember_password": false,
+    "default_remote_dir": "/home/HwHiAiUser/work"
+  },
+  "cann": {
+    "path": "/usr/local/Ascend/cann-8.5.0"
+  },
+  "paths": {
+    "work_dir": "/home/HwHiAiUser/work",
+    "custom_opp_opgen": "/home/HwHiAiUser/custom_opp_opgen_v1",
+    "custom_opp_dim8_g": "/home/HwHiAiUser/custom_opp_dim8_g",
+    "custom_opp_addcustom_cann85": "/home/HwHiAiUser/custom_opp_ascendc_addcustom_cann85",
+    "kpp_out": "/home/HwHiAiUser/kpp_out"
+  }
+}

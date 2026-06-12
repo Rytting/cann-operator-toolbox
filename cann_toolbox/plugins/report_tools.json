@@ -1,0 +1,84 @@
+{
+  "schema_version": 1,
+  "plugins": [
+    {
+      "id": "msprof.prof_report",
+      "name": "msProf CSV 转 Excel（OpBasicInfo/PipeUtilization）",
+      "group": "msProf / 结果整理",
+      "type": "report",
+      "description": "整理 msProf op / MindStudio Insight 导出的算子性能 CSV，例如 OpBasicInfo.csv、PipeUtilization.csv。用于把 01/03/04/07 这类性能分析原始表汇总成一个 Excel；不是 msOpGen sim 的 dump2trace JSON。",
+      "script": "{workspace}/官方算子开发工具/msProf/tools/prof_report.py",
+      "input": {
+        "kind": "dir",
+        "label": "msProf 输出目录",
+        "required_files_any": ["OpBasicInfo.csv", "PipeUtilization.csv"]
+      },
+      "output": {
+        "kind": "file",
+        "label": "Excel 输出文件",
+        "default": "{input}/prof_report.xlsx",
+        "extensions": [".xlsx"]
+      },
+      "command_template": "\"{python}\" \"{script}\" \"{input}\" \"{output}\"",
+      "requirements": ["openpyxl"],
+      "after_success": {
+        "show_output_path": true,
+        "offer_open_file": true,
+        "offer_open_folder": true
+      }
+    },
+    {
+      "id": "msopgen.trace_report",
+      "name": "dump2trace JSON 转 Excel（接 msOpGen sim）",
+      "group": "msOpGen / 结果整理",
+      "type": "report",
+      "description": "接在“msOpGen sim 转时间线”后面用：读取 dump2trace_core*.json，导出汇总、指令明细和耗时 Top 表，方便不用每次都进 Chrome tracing 里手翻。",
+      "script": "{workspace}/官方算子开发工具/msOpGen/tools/trace_report.py",
+      "input": {
+        "kind": "file",
+        "label": "dump2trace JSON",
+        "extensions": [".json"]
+      },
+      "output": {
+        "kind": "file",
+        "label": "Excel 输出文件",
+        "default": "{input_dir}/{input_stem}_report.xlsx",
+        "extensions": [".xlsx"]
+      },
+      "command_template": "\"{python}\" \"{script}\" \"{input}\" \"{output}\"",
+      "requirements": ["openpyxl"],
+      "after_success": {
+        "show_output_path": true,
+        "offer_open_file": true,
+        "offer_open_folder": true
+      }
+    },
+    {
+      "id": "msprof.roofline_plot",
+      "name": "Roofline 单目录画图（Memory/Arithmetic CSV）",
+      "group": "msProf / 结果整理",
+      "type": "report",
+      "description": "读取单个 msProf op / Insight 导出目录里的 Memory.csv 和 ArithmeticUtilization.csv，生成接近官方文档 GM/L2 样式的单次 Roofline 摘要图。要把 64/128/256 多规格画在同一张图上，用本地分析里的多规格 Roofline 内置工具。",
+      "script": "{workspace}/官方算子开发工具/msProf/Roofline调研/tools/roofline_plot.py",
+      "input": {
+        "kind": "dir",
+        "label": "含 Memory.csv 的目录",
+        "required_files_all": ["Memory.csv", "ArithmeticUtilization.csv"]
+      },
+      "output": {
+        "kind": "file",
+        "label": "图片输出文件",
+        "default": "{input}/roofline_official_single.png",
+        "extensions": [".png", ".svg"]
+      },
+      "label": "AddCustom fp16",
+      "command_template": "\"{python}\" \"{script}\" --style official-single --data-dir \"{input}\" --total-elements 16384 --blockdim 8 --vec-flop-per-elem 1 --op-name \"{label}\" --output \"{output}\"",
+      "requirements": ["matplotlib", "numpy"],
+      "after_success": {
+        "show_output_path": true,
+        "offer_open_file": true,
+        "offer_open_folder": true
+      }
+    }
+  ]
+}

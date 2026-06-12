@@ -1,0 +1,31 @@
+__pycache__/
+*.py[cod]
+*.pyo
+.pytest_cache/
+.mypy_cache/
+
+# Local user config and secrets
+cann_toolbox/config/toolbox_config.json
+.env
+*.key
+*.pem
+
+# Generated analysis outputs
+*.tar.gz
+*.zip
+*.7z
+*.rar
+*.xlsx
+*.csv
+*.sqlite
+*.db
+*.png
+*.svg
+*.jsonl
+
+# OS/editor noise
+Thumbs.db
+.DS_Store
+*.tmp
+~$*
+.~lock.*

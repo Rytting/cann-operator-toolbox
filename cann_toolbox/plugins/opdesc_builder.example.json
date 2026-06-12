@@ -1,0 +1,75 @@
+{
+  "schema_version": 1,
+  "plugins": [
+    {
+      "id": "msopgen.opdesc_json",
+      "type": "builder",
+      "name": "算子描述 JSON 生成器",
+      "group": "msOpGen / 描述文件",
+      "emit": "json",
+      "description": "按算子名、输入/输出张量、属性生成 msopgen 可用的算子描述 JSON。下拉框已锁死合法值；切到 MindSpore 模式会自动隐藏 format 并换成合并写法的 dtype。生成后用「保存到本地」存好，再用文件管理器/发送到板子传上去。",
+      "basic_fields": [
+        {"key": "op", "label": "算子名", "type": "text", "default": "AddCustom"},
+        {"key": "mode", "label": "模式", "type": "choice",
+         "options": ["IR", "MindSpore"], "default": "IR",
+         "control_only": true, "rerender_on_change": true,
+         "option_hints": {
+           "IR": "通用/Ascend C/TensorFlow/ONNX/PyTorch。format 与 dtype 分开写（format=[\"ND\"], type=[\"fp16\"]）。不确定就用它。",
+           "MindSpore": "华为 MindSpore 框架专用。没有 format 字段，排布和类型合并写在 type 里（如 I8_NCHW=int8+NCHW）。"
+         }}
+      ],
+      "repeat_sections": [
+        {
+          "key": "input_desc", "label": "输入张量",
+          "legend": "name=张量名 ｜ param_type: required必填 / optional可选 / dynamic动态(数量不定) ｜ format=内存排布(NCHW=批/通道/高/宽, ND=任意维度) ｜ dtype=数据类型。可逗号分隔填多个。",
+          "fields": [
+            {"key": "name", "type": "text", "label": "名字", "default": "x"},
+            {"key": "param_type", "type": "choice", "label": "参数类型",
+             "options": ["required", "optional", "dynamic"], "default": "required"},
+            {"key": "format", "type": "choice", "label": "format",
+             "options": ["NCHW", "NHWC", "ND", "NC1HWC0"], "default": "ND",
+             "emit": "list", "omit_when": {"basic": "mode", "equals": "MindSpore"}},
+            {"key": "type", "type": "choice", "label": "dtype",
+             "default": "fp16", "emit": "list",
+             "options_by": {"basic": "mode", "map": {
+               "IR": ["fp16", "fp32", "int8", "int32", "uint8", "bool"],
+               "MindSpore": ["F16_NCHW", "F16_NHWC", "F32_NCHW", "F32_NHWC",
+                             "I8_NCHW", "I8_NHWC", "I32_NCHW", "U8_NCHW", "BOOL_NCHW"]
+             }}}
+          ]
+        },
+        {
+          "key": "output_desc", "label": "输出张量",
+          "legend": "字段含义同输入张量。",
+          "fields": [
+            {"key": "name", "type": "text", "label": "名字", "default": "y"},
+            {"key": "param_type", "type": "choice", "label": "参数类型",
+             "options": ["required", "optional", "dynamic"], "default": "required"},
+            {"key": "format", "type": "choice", "label": "format",
+             "options": ["NCHW", "NHWC", "ND", "NC1HWC0"], "default": "ND",
+             "emit": "list", "omit_when": {"basic": "mode", "equals": "MindSpore"}},
+            {"key": "type", "type": "choice", "label": "dtype",
+             "default": "fp16", "emit": "list",
+             "options_by": {"basic": "mode", "map": {
+               "IR": ["fp16", "fp32", "int8", "int32", "uint8", "bool"],
+               "MindSpore": ["F16_NCHW", "F16_NHWC", "F32_NCHW", "F32_NHWC",
+                             "I8_NCHW", "I8_NHWC", "I32_NCHW", "U8_NCHW", "BOOL_NCHW"]
+             }}}
+          ]
+        },
+        {
+          "key": "attr", "label": "属性（可选，不填就不生成）",
+          "legend": "name=属性名 ｜ param_type: required必填 / optional可选（属性不能用 dynamic）｜ type=属性类型(list_int=整数列表如strides, int=单个整数)。留空名字这一行不会写进 JSON。",
+          "fields": [
+            {"key": "name", "type": "text", "label": "名字", "default": ""},
+            {"key": "param_type", "type": "choice", "label": "参数类型",
+             "options": ["required", "optional"], "default": "required"},
+            {"key": "type", "type": "choice", "label": "类型",
+             "options": ["list_int", "int", "float", "bool", "str", "list_float"],
+             "default": "list_int"}
+          ]
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,83 @@
+{
+  "schema_version": 1,
+  "plugins": [
+    {
+      "id": "msprof.prof_report",
+      "name": "msProf CSV 生成 Excel 报告",
+      "group": "msProf / 结果整理",
+      "type": "report",
+      "description": "读取 OpBasicInfo.csv、PipeUtilization.csv 等结果，生成带图表的 Excel。",
+      "script": "{workspace}/官方算子开发工具/msProf/tools/prof_report.py",
+      "input": {
+        "kind": "dir",
+        "label": "msProf 输出目录",
+        "required_files_any": ["OpBasicInfo.csv", "PipeUtilization.csv"]
+      },
+      "output": {
+        "kind": "file",
+        "label": "Excel 输出文件",
+        "default": "{input}/prof_report.xlsx",
+        "extensions": [".xlsx"]
+      },
+      "command_template": "\"{python}\" \"{script}\" \"{input}\" \"{output}\"",
+      "requirements": ["openpyxl"],
+      "after_success": {
+        "show_output_path": true,
+        "offer_open_file": true,
+        "offer_open_folder": true
+      }
+    },
+    {
+      "id": "msopgen.trace_report",
+      "name": "dump2trace JSON 生成 Excel",
+      "group": "msOpGen / 结果整理",
+      "type": "report",
+      "description": "读取 msopgen sim 生成的 trace JSON，导出流水统计 Excel。",
+      "script": "{workspace}/官方算子开发工具/msOpGen/tools/trace_report.py",
+      "input": {
+        "kind": "file",
+        "label": "dump2trace JSON",
+        "extensions": [".json"]
+      },
+      "output": {
+        "kind": "file",
+        "label": "Excel 输出文件",
+        "default": "{input_dir}/{input_stem}_report.xlsx",
+        "extensions": [".xlsx"]
+      },
+      "command_template": "\"{python}\" \"{script}\" \"{input}\" \"{output}\"",
+      "requirements": ["openpyxl"],
+      "after_success": {
+        "show_output_path": true,
+        "offer_open_file": true,
+        "offer_open_folder": true
+      }
+    },
+    {
+      "id": "msprof.roofline_plot",
+      "name": "Roofline 画图",
+      "group": "msProf / 结果整理",
+      "type": "report",
+      "description": "读取 Memory.csv 和 ArithmeticUtilization.csv，生成 Roofline 图片。",
+      "script": "{workspace}/官方算子开发工具/msProf/Roofline调研/tools/roofline_plot.py",
+      "input": {
+        "kind": "dir",
+        "label": "含 Memory.csv 的目录",
+        "required_files_all": ["Memory.csv", "ArithmeticUtilization.csv"]
+      },
+      "output": {
+        "kind": "file",
+        "label": "图片输出文件",
+        "default": "{input}/roofline.png",
+        "extensions": [".png", ".svg"]
+      },
+      "command_template": "\"{python}\" \"{script}\" --data-dir \"{input}\" --output \"{output}\"",
+      "requirements": ["matplotlib", "numpy"],
+      "after_success": {
+        "show_output_path": true,
+        "offer_open_file": true,
+        "offer_open_folder": true
+      }
+    }
+  ]
+}
