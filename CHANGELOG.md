@@ -14,6 +14,14 @@ Changes that have been made locally but are not part of a tagged release yet.
 
 尚未发布成版本的本地改动会先放在这里。
 
+### Added
+
+- Chinese quick-start guide for classmates and first-time users, covering download, Python discovery, dependency installation, board IP/user checks, and first connection troubleshooting.
+
+### 新增
+
+- 新增同学快速开始文档，说明下载、查找 Python、安装依赖、确认板子 IP/用户名，以及第一次连接失败时的排查步骤。
+
 ## [0.1.0] - 2026-06-12
 
 Initial public release.
