@@ -26,6 +26,24 @@ D:\cann-operator-toolbox
 
 ## 2. 找到自己的 Python
 
+最省事的方法是先运行本仓库自带的体检脚本。它会自动查找 Python、检查依赖、列出本机网卡 IP，并测试默认板子地址是否能 ping 通：
+
+```powershell
+powershell -ExecutionPolicy Bypass -File .\scripts\check_local_setup.ps1
+```
+
+如果你的板子不是 `192.168.0.2`，可以指定：
+
+```powershell
+powershell -ExecutionPolicy Bypass -File .\scripts\check_local_setup.ps1 -BoardIP 你的板子IP
+```
+
+如果脚本提示找不到 Python，但你知道自己的 `python.exe` 在哪里，也可以指定：
+
+```powershell
+powershell -ExecutionPolicy Bypass -File .\scripts\check_local_setup.ps1 -PythonPath "C:\Path\To\python.exe"
+```
+
 工具箱需要 Windows 上的 Python 3.10 或更高版本。
 
 先打开 PowerShell，试一下：
@@ -157,6 +175,12 @@ systemctl status ssh
 ```
 
 ## 8. 连不上时先查这几件事
+
+也可以直接运行体检脚本，让它帮你做 ping、22 端口和网卡 IP 检查：
+
+```powershell
+powershell -ExecutionPolicy Bypass -File .\scripts\check_local_setup.ps1 -BoardIP 192.168.0.2 -BoardUser HwHiAiUser
+```
 
 先在 Windows PowerShell 里试：
 

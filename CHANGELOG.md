@@ -17,10 +17,20 @@ Changes that have been made locally but are not part of a tagged release yet.
 ### Added
 
 - Chinese quick-start guide for classmates and first-time users, covering download, Python discovery, dependency installation, board IP/user checks, and first connection troubleshooting.
+- Windows setup check script for detecting Python, required Python packages, local network addresses, board ping, SSH port reachability, and the suggested toolbox launch command.
+
+### Changed
+
+- The board connection button now stays usable while SSH connection is in progress. Clicking it cancels the pending connection request instead of forcing the user to close the whole toolbox window.
 
 ### 新增
 
 - 新增同学快速开始文档，说明下载、查找 Python、安装依赖、确认板子 IP/用户名，以及第一次连接失败时的排查步骤。
+- 新增 Windows 本机环境体检脚本，可检测 Python、必要 Python 包、本机网卡地址、板子 ping、SSH 端口连通性，并给出工具箱启动命令。
+
+### 调整
+
+- SSH 正在连接时，连接按钮会变成“取消连接”，可以取消本次连接请求，不再需要整个退出工具箱。
 
 ## [0.1.0] - 2026-06-12
 

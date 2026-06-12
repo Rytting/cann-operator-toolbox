@@ -6,6 +6,12 @@ A small desktop toolbox for people using Huawei Ascend C / CANN operator-develop
 
 For Chinese-speaking first-time users, start here: [同学快速开始](docs/quick_start_zh-CN.md).
 
+To run a local setup check on Windows:
+
+```powershell
+powershell -ExecutionPolicy Bypass -File .\scripts\check_local_setup.ps1
+```
+
 It is made for developers who are actually using that toolchain with a real Ascend developer kit or board. The goal is not to replace the official tools, but to make the parts we repeatedly need during custom-operator development easier to run, explain, and extend.
 
 The project is intentionally practical: it turns frequently used CANN commands into forms and buttons, keeps generated commands visible, and includes local report scripts for profiling and simulator outputs.

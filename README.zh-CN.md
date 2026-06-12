@@ -6,6 +6,12 @@
 
 第一次从 GitHub 下载使用的同学，建议先看：[同学快速开始](docs/quick_start_zh-CN.md)。
 
+想先自动检查本机环境，可以在仓库根目录运行：
+
+```powershell
+powershell -ExecutionPolicy Bypass -File .\scripts\check_local_setup.ps1
+```
+
 它是给真正拿 Ascend 开发者套件或板子做自定义算子开发的人用的。目标不是替代官方工具，而是把我们在实际开发里反复要跑、反复要解释、反复会踩坑的部分整理成更容易点击、复用和扩展的工作台。
 
 这个项目偏实用：它会把常用 CANN 命令变成表单和按钮，保留可见的生成命令，并附带一些用于 profiling、仿真输出、CSV/JSON 转换和画图的本地脚本。

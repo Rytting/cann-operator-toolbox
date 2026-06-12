@@ -1756,6 +1756,10 @@ class CANNToolbox:
         self._field_defs = []
         self._current    = None
         self._ssh        = None
+        self._connecting = False
+        self._connect_seq = 0
+        self._connect_lock = threading.Lock()
+        self._pending_connect_ssh = None
         self._active_channel = None
         self._running_board_command = False
         self._run_output_chunks = []
@@ -2047,7 +2051,9 @@ class CANNToolbox:
             self._flash(f"保存失败：{e}", "red")
 
     def _toggle_ssh(self):
-        if self._ssh:
+        if self._connecting:
+            self._cancel_connect()
+        elif self._ssh:
             self._disconnect()
         else:
             self._connect()
@@ -2063,39 +2069,109 @@ class CANNToolbox:
         if not board["password"]:
             self._flash("请输入板端密码（不会保存）", "red")
             return
+        with self._connect_lock:
+            self._connect_seq += 1
+            seq = self._connect_seq
+            self._connecting = True
+            self._pending_connect_ssh = None
         self._conn_label.config(text="● 连接中...", foreground="orange")
-        self._conn_btn.config(state="disabled")
-        threading.Thread(target=self._do_connect, args=(board,), daemon=True).start()
+        self._conn_btn.config(text="取消连接", state="normal")
+        self._filemgr_btn.config(state="disabled")
+        self._append_output(f"[SSH] 正在连接 {board['user']}@{board['host']}:{board['port']}...\n")
+        threading.Thread(target=self._do_connect, args=(board, seq), daemon=True).start()
 
-    def _do_connect(self, board):
+    def _is_current_connect(self, seq):
+        with self._connect_lock:
+            return self._connecting and seq == self._connect_seq
+
+    def _do_connect(self, board, seq):
+        ssh = None
         try:
             ssh = paramiko.SSHClient()
             ssh.set_missing_host_key_policy(paramiko.AutoAddPolicy())
+            with self._connect_lock:
+                if seq != self._connect_seq or not self._connecting:
+                    return
+                self._pending_connect_ssh = ssh
             ssh.connect(
                 board["host"],
                 port=board["port"],
                 username=board["user"],
                 password=board["password"],
                 timeout=10,
+                auth_timeout=10,
+                banner_timeout=10,
             )
-            self._ssh = ssh
-            self.root.after(0, lambda: self._on_connected(board))
+            if not self._is_current_connect(seq):
+                try:
+                    ssh.close()
+                except Exception:
+                    pass
+                return
+            with self._connect_lock:
+                if seq == self._connect_seq:
+                    self._pending_connect_ssh = None
+            self.root.after(0, lambda s=ssh: self._on_connected(board, s, seq))
         except Exception as e:
-            self.root.after(0, lambda: self._on_connect_fail(str(e)))
+            if self._is_current_connect(seq):
+                self.root.after(0, lambda: self._on_connect_fail(str(e), seq))
+            else:
+                try:
+                    if ssh:
+                        ssh.close()
+                except Exception:
+                    pass
 
-    def _on_connected(self, board):
+    def _on_connected(self, board, ssh, seq):
+        if not self._is_current_connect(seq):
+            try:
+                ssh.close()
+            except Exception:
+                pass
+            return
+        with self._connect_lock:
+            self._connecting = False
+            self._pending_connect_ssh = None
+        self._ssh = ssh
         self._conn_label.config(text=f"● 已连接 {board['host']}", foreground="green")
         self._conn_btn.config(text="断开", state="normal")
         self._filemgr_btn.config(state="normal")
         self._update_buttons()
         self._append_output(f"[SSH] 已连接到 {board['user']}@{board['host']}:{board['port']}\n")
 
-    def _on_connect_fail(self, err):
+    def _on_connect_fail(self, err, seq=None):
+        if seq is not None and not self._is_current_connect(seq):
+            return
+        with self._connect_lock:
+            self._connecting = False
+            self._pending_connect_ssh = None
         self._conn_label.config(text="● 连接失败", foreground="red")
         self._conn_btn.config(text="连接板子", state="normal")
         self._append_output(f"[SSH] 连接失败：{err}\n")
 
+    def _cancel_connect(self):
+        with self._connect_lock:
+            if not self._connecting:
+                return
+            self._connect_seq += 1
+            self._connecting = False
+            pending = self._pending_connect_ssh
+            self._pending_connect_ssh = None
+        if pending:
+            try:
+                pending.close()
+            except Exception:
+                pass
+        self._conn_label.config(text="● 已取消连接", foreground="gray")
+        self._conn_btn.config(text="连接板子", state="normal")
+        self._filemgr_btn.config(state="disabled")
+        self._update_buttons()
+        self._append_output("[SSH] 已取消本次连接请求\n")
+
     def _disconnect(self):
+        if self._connecting:
+            self._cancel_connect()
+            return
         if self._ssh:
             try:
                 self._ssh.close()
