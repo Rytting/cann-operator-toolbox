@@ -38,6 +38,29 @@ function Read-Version([string]$Root) {
     return "unknown"
 }
 
+function Save-UserConfig([string]$Root, [string]$TempRoot) {
+    $configFile = Join-Path $Root "cann_toolbox\config\toolbox_config.json"
+    $savedFile = Join-Path $TempRoot "toolbox_config.json"
+    if (Test-Path -LiteralPath $configFile) {
+        Copy-Item -LiteralPath $configFile -Destination $savedFile -Force
+        return $savedFile
+    }
+    return ""
+}
+
+function Restore-UserConfig([string]$Root, [string]$SavedFile) {
+    if ([string]::IsNullOrWhiteSpace($SavedFile)) {
+        return
+    }
+    if (-not (Test-Path -LiteralPath $SavedFile)) {
+        return
+    }
+    $configDir = Join-Path $Root "cann_toolbox\config"
+    New-Item -ItemType Directory -Force -Path $configDir | Out-Null
+    Copy-Item -LiteralPath $SavedFile -Destination (Join-Path $configDir "toolbox_config.json") -Force
+    Write-Step "User config restored: cann_toolbox\config\toolbox_config.json"
+}
+
 $scriptPath = $MyInvocation.MyCommand.Path
 $scriptDir = Split-Path -Parent $scriptPath
 $toolboxDir = Split-Path -Parent $scriptDir
@@ -74,6 +97,10 @@ $extractRoot = Join-Path $tempRoot "extract"
 $backupRoot = "$InstallRoot.backup_$stamp"
 
 New-Item -ItemType Directory -Force -Path $tempRoot, $extractRoot | Out-Null
+$savedUserConfig = Save-UserConfig $InstallRoot $tempRoot
+if (-not [string]::IsNullOrWhiteSpace($savedUserConfig)) {
+    Write-Step "User config saved before update."
+}
 
 Write-Step "No Git repository detected. Downloading latest zip."
 Write-Step "Download URL: $DownloadUrl"
@@ -95,6 +122,7 @@ Get-ChildItem -LiteralPath $sourceRoot.FullName -Force | ForEach-Object {
     $dest = Join-Path $InstallRoot $_.Name
     Copy-Item -LiteralPath $_.FullName -Destination $dest -Recurse -Force
 }
+Restore-UserConfig $InstallRoot $savedUserConfig
 
 $newVersion = Read-Version $InstallRoot
 Write-Step "Update complete: $oldVersion -> $newVersion"

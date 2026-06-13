@@ -32,6 +32,7 @@ Changes that have been made locally but are not part of a tagged release yet.
 
 ### Fixed
 
+- The ZIP update path now explicitly preserves `cann_toolbox/config/toolbox_config.json` before copying new files, then restores it after the update.
 - The OPP checker no longer reports missing tiling just because the selected `src/` directory only includes a tiling header from a neighboring generated directory.
 
 ### 新增
@@ -52,6 +53,7 @@ Changes that have been made locally but are not part of a tagged release yet.
 
 ### 修复
 
+- ZIP 更新路径现在会在覆盖前显式保存 `cann_toolbox/config/toolbox_config.json`，更新后再恢复，避免用户连接配置被新版文件影响。
 - 修复 OPP 检查器误报 tiling 缺失的问题：如果用户只选择 `src/` 目录，而 tiling 头文件是通过 host include 放在相邻生成目录中，现在会识别为注意项而不是缺失项。
 
 ## [0.1.0] - 2026-06-12

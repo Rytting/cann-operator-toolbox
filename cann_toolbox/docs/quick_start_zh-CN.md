@@ -119,6 +119,8 @@ python .\cann_toolbox\run_toolbox.py
 
 如果你是下载 ZIP 解压的版本，脚本会下载最新版 ZIP、备份旧目录，再覆盖更新。
 
+自己的连接配置会保留：`cann_toolbox/config/toolbox_config.json` 会在覆盖前临时保存，更新后恢复。
+
 手动运行脚本也可以：
 
 ```powershell

@@ -22,4 +22,5 @@ powershell -ExecutionPolicy Bypass -File .\cann_toolbox\scripts\update_toolbox.p
 - 先关闭正在运行的 CANN 工具箱窗口，再执行更新命令。
 - 如果当前目录是 Git 克隆版，脚本会执行 `git pull --ff-only origin main`。
 - 如果当前目录是下载 ZIP 后解压的版本，脚本会下载 GitHub `main.zip`，备份旧目录，再覆盖更新。
+- 用户自己的 `cann_toolbox/config/toolbox_config.json` 会在覆盖前临时保存，更新后恢复。
 - 脚本会检查 `README.md`、`LICENSE`、`cann_toolbox/run_toolbox.py`、`cann_toolbox/VERSION`，避免误把普通项目目录当成工具箱安装目录。
