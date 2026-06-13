@@ -29,6 +29,7 @@ PLUGIN_DIR = APP_DIR / "plugins"
 DEFAULT_CONFIG_PATH = CONFIG_DIR / "default_config.json"
 USER_CONFIG_PATH = CONFIG_DIR / "toolbox_config.json"
 VERSION_PATH = APP_DIR / "VERSION"
+UPDATE_SCRIPT_PATH = APP_DIR / "scripts" / "update_toolbox.ps1"
 UPDATE_VERSION_URL = "https://raw.githubusercontent.com/Rytting/cann-operator-toolbox/main/cann_toolbox/VERSION"
 PROJECT_URL = "https://github.com/Rytting/cann-operator-toolbox"
 DEFAULT_CONFIG = {
@@ -1992,6 +1993,9 @@ class CANNToolbox:
             command=self._check_updates)
         self._update_btn.pack(side=tk.LEFT, padx=(0, 4))
         ttk.Button(
+            update_box, text="更新命令", width=9,
+            command=self._copy_update_command).pack(side=tk.LEFT, padx=(0, 4))
+        ttk.Button(
             update_box, text="GitHub", width=7,
             command=self._open_project_page).pack(side=tk.LEFT)
 
@@ -3322,7 +3326,7 @@ class CANNToolbox:
             local = self._local_version
             cmp_result = compare_versions(local, latest)
             if cmp_result < 0:
-                text = f"发现新版 {latest}（当前 {local}）"
+                text = f"发现新版 {latest}（当前 {local}），可复制更新命令"
                 color = "#b26a00"
             elif cmp_result > 0:
                 text = f"本地版本 {local} 较新"
@@ -3346,6 +3350,19 @@ class CANNToolbox:
         except Exception:
             self.root.after(0, lambda: self._set_update_status(
                 f"无法检查更新（当前 {self._local_version}）", "gray"))
+
+    def _copy_update_command(self):
+        if not UPDATE_SCRIPT_PATH.exists():
+            self._flash(f"找不到更新脚本：{UPDATE_SCRIPT_PATH}", "red")
+            return
+        script = str(UPDATE_SCRIPT_PATH)
+        command = (
+            "# 请先关闭 CANN 工具箱窗口，再运行下面这行更新命令\n"
+            f'powershell -ExecutionPolicy Bypass -File "{script}"'
+        )
+        self.root.clipboard_clear()
+        self.root.clipboard_append(command)
+        self._flash("✓ 已复制更新命令：关闭工具箱后粘贴到 PowerShell 运行", "green")
 
     def _open_project_page(self):
         try:

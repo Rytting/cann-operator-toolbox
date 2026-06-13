@@ -18,7 +18,7 @@ python .\cann_toolbox\run_toolbox.py
 - `src/`：GUI 主程序和核心逻辑。
 - `config/`：后续放板端连接配置、默认路径、用户偏好。
 - `plugins/`：后续放 KPP、msProf、msOpGen 等可插拔功能模块。
-- `scripts/`：工具箱调用的小脚本，例如 profiling 摘要、KPP 结果解析。
+- `scripts/`：工具箱调用的小脚本，例如更新脚本、profiling 摘要、KPP 结果解析。
 - `docs/`：工具箱自身设计说明、使用说明和交接记录。
 
 ## 当前状态

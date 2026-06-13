@@ -20,11 +20,13 @@ Changes that have been made locally but are not part of a tagged release yet.
 - Windows setup check script for detecting Python, required Python packages, local network addresses, board ping, SSH port reachability, and the suggested toolbox launch command.
 - OPP project completeness checker after `msopgen gen`, with profile-based checks for vector elementwise, Reduce, Gather/Scatter, Scan, Copy/Cast/Layout, MatMul/Cube, and generic skeletons.
 - Toolbox version marker and a bottom-right update checker that compares the local version with the GitHub release copy.
+- Semi-automatic update script for classmates: clone-based installs use `git pull`, while ZIP installs download the latest GitHub archive, back up the old directory, and copy the new files.
 
 ### Changed
 
 - The board connection button now stays usable while SSH connection is in progress. Clicking it cancels the pending connection request instead of forcing the user to close the whole toolbox window.
 - The default board home directory can now be selected with the board-side path picker instead of only being typed by hand.
+- The toolbox bottom bar now includes an update-command button, so users can copy a safe PowerShell update command after a newer version is detected.
 - The `msopgen gen` flow now calls out that generated projects are only skeletons and must be completed before Release/Debug builds.
 - Combo boxes can now show friendly Chinese labels while still emitting the underlying command-line values.
 
@@ -38,11 +40,13 @@ Changes that have been made locally but are not part of a tagged release yet.
 - 新增 Windows 本机环境体检脚本，可检测 Python、必要 Python 包、本机网卡地址、板子 ping、SSH 端口连通性，并给出工具箱启动命令。
 - 新增 `msopgen gen` 后的 OPP 工程完整性检查器，可按 Vector 逐元素、Reduce、Gather/Scatter、Scan、Copy/Cast/Layout、MatMul/Cube、通用骨架等范式检查工程是否仍像空壳。
 - 新增工具箱版本标记和右下角检查更新入口，可和 GitHub 发布副本对比本地版本。
+- 新增半自动更新脚本：Git 克隆版自动 `git pull`，ZIP 解压版自动下载 GitHub 最新压缩包、备份旧目录并覆盖更新。
 
 ### 调整
 
 - SSH 正在连接时，连接按钮会变成“取消连接”，可以取消本次连接请求，不再需要整个退出工具箱。
 - 默认板端家目录现在可以用板端路径选择器点选，不再只能手动输入。
+- 工具箱底部新增“更新命令”按钮，发现新版后可以复制安全的 PowerShell 更新命令。
 - `msopgen gen` 流程现在会明确提示：生成的是工程骨架，必须补完 kernel/host/tiling 后再做 Release 或 Debug 构建。
 - 下拉框支持显示友好的中文选项，同时生成命令时仍使用底层命令行参数。
 

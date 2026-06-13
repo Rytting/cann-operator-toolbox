@@ -105,7 +105,27 @@ python .\cann_toolbox\run_toolbox.py
 "C:\Path\To\python.exe" .\cann_toolbox\run_toolbox.py
 ```
 
-## 5. 填板子连接信息
+## 5. 更新工具箱
+
+工具箱右下角会显示当前版本，并提供“检查更新”。
+
+如果提示发现新版，可以点“更新命令”。它会把一条 PowerShell 命令复制到剪贴板。推荐操作是：
+
+1. 先关闭 CANN 工具箱窗口。
+2. 打开 PowerShell，粘贴刚复制的命令。
+3. 等脚本完成后，重新启动工具箱。
+
+如果你是用 Git 克隆的仓库，脚本会自动执行 `git pull --ff-only origin main`。
+
+如果你是下载 ZIP 解压的版本，脚本会下载最新版 ZIP、备份旧目录，再覆盖更新。
+
+手动运行脚本也可以：
+
+```powershell
+powershell -ExecutionPolicy Bypass -File .\cann_toolbox\scripts\update_toolbox.ps1
+```
+
+## 6. 填板子连接信息
 
 工具箱顶部需要填：
 
@@ -125,7 +145,7 @@ CANN path: /usr/local/Ascend/cann-8.5.0
 
 但这只是示例，不保证每块板子都一样。
 
-## 6. 不知道板子 IP 怎么办
+## 7. 不知道板子 IP 怎么办
 
 如果是 USB RNDIS 直连 Atlas 开发板，常见情况是：
 
@@ -152,7 +172,7 @@ ipconfig
 
 如果板子接在局域网或路由器上，IP 可能完全不同，需要看路由器后台、串口日志，或问负责板子的人。
 
-## 7. 不知道用户名怎么办
+## 8. 不知道用户名怎么办
 
 Atlas 200I DK A2 常见普通用户是：
 
@@ -174,7 +194,7 @@ ip addr
 systemctl status ssh
 ```
 
-## 8. 连不上时先查这几件事
+## 9. 连不上时先查这几件事
 
 也可以直接运行体检脚本，让它帮你做 ping、22 端口和网卡 IP 检查：
 
@@ -207,7 +227,7 @@ ssh HwHiAiUser@192.168.0.2
 - 检查板端 SSH 服务是否启动。
 - 检查端口是否还是 `22`。
 
-## 9. 第一次打开工具箱后建议做什么
+## 10. 第一次打开工具箱后建议做什么
 
 按这个顺序点：
 
@@ -217,7 +237,7 @@ ssh HwHiAiUser@192.168.0.2
 4. 运行“检查 CANN 工具路径”，确认板端 CANN 路径存在。
 5. 再开始使用 `msKPP`、`msOpGen`、`msOpST`、`msProf` 等工具页面。
 
-## 10. 重要提醒
+## 11. 重要提醒
 
 - 不要把自己的 `cann_toolbox/config/toolbox_config.json` 提交到 GitHub，它可能保存本机配置或密码。
 - 生成命令后，先看一眼再发到板子。
