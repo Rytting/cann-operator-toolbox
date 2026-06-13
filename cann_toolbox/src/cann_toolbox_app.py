@@ -182,6 +182,27 @@ def _form_label(parent, text, *, required=False, empty=False):
     return label
 
 
+def _combo_display_options(field):
+    labels = field.get("option_labels", {})
+    return [labels.get(value, value) for value in field.get("options", [])]
+
+
+def _combo_display_value(field, value):
+    if field.get("type") != "combo":
+        return value
+    return field.get("option_labels", {}).get(value, value)
+
+
+def _combo_emit_value(field, value):
+    if field.get("type") != "combo":
+        return value
+    labels = field.get("option_labels", {})
+    if value in field.get("options", []):
+        return value
+    reverse = {label: raw for raw, label in labels.items()}
+    return reverse.get(value, value)
+
+
 def _plugin_to_builder_tool(plugin, manifest_path):
     return {
         "name": _plugin_display_name(plugin),
@@ -446,7 +467,7 @@ TOOLS = [
             {
                 "name": "生成算子工程（gen）",
                 "target": "board",
-                "desc": "按我们跑通的 CANN 8.5 路线生成 Ascend C OPP 工程。板子芯片和 C++ 工程类型是必填项。",
+                "desc": "按我们跑通的 CANN 8.5 路线生成 Ascend C OPP 工程骨架。注意：gen 之后还要补算子实现代码，不能直接当成已完成工程。",
                 "template": (
                     "cd {workdir} && "
                     "{cann_env} && "
@@ -454,6 +475,8 @@ TOOLS = [
                     "msopgen gen -i {json}{options} -out {output}"
                 ),
                 "fields": [
+                    {"type": "note",
+                     "text": "⚠️ 重要断点：msopgen gen 只生成“工程骨架”，不是完整可用的算子。生成后请先进入输出目录，补 op_kernel 里的 kernel 计算逻辑、op_host/tiling 里的切分和参数推导，再去构建 OPP 包。AddCustom 示例里通常要确认 x/y/z 输入输出、TilingData、SetBlockDim、CopyIn/Compute/CopyOut 这些位置。"},
                     {"type": "note",
                      "text": "常用成功路线：JSON 放在板端工作目录，生成 Ascend C/C++ 工程时必须带 -lan cpp；-c 这里用 ai_core-ascend310b，和 msOpST run 的 -soc Ascend310B1 不是同一种写法。"},
                     {"key": "workdir", "label": "板端工作目录", "type": "text",
@@ -484,6 +507,44 @@ TOOLS = [
                 ],
             },
             {
+                "name": "检查 OPP 工程完整性（gen 后）",
+                "target": "local",
+                "desc": "读取 msopgen gen 生成的 OPP 工程目录，检查 kernel、host、tiling 是否仍像空壳。适合在 build 前做一次本地体检。",
+                "template": "\"{python}\" \"{toolbox}/scripts/opp_project_check.py\" \"{project}\" --op-profile {op_profile}{options}",
+                "fields": [
+                    {"type": "note",
+                     "text": "这是只读检查，不会修改工程文件。第一版检查本机目录；如果工程在板端，请先用文件管理器下载到本机，或把工程同步到本地后再运行。请按算子的编程范式选择检查模板；检查通过不代表算子数学结果一定正确，只说明关键阶段不像空壳。"},
+                    {"key": "python", "label": "Python 解释器", "type": "file",
+                     "default": LOCAL_PYTHON},
+                    {"key": "project", "label": "OPP 工程目录（本机）", "type": "dir",
+                     "default": f"{LOCAL_ROOT}/官方算子开发工具/msOpGen/RgbToGrayCustom/src"},
+                    {"key": "op_profile", "label": "算子编程范式", "type": "combo",
+                     "default": "elementwise_binary",
+                     "options": [
+                         "elementwise_binary",
+                         "elementwise_vector",
+                         "reduce",
+                         "gather_scatter",
+                         "scan",
+                         "copy_cast_layout",
+                         "matmul_cube_basic",
+                         "generic",
+                     ],
+                     "option_labels": {
+                         "elementwise_binary": "Vector 二元逐元素（Add/Sub/Mul 类）",
+                         "elementwise_vector": "Vector 逐元素/图像简单变换（RgbToGray 类）",
+                         "reduce": "Reduce 聚合类（Sum/Max/Mean）",
+                         "gather_scatter": "Gather/Scatter 索引寻址类",
+                         "scan": "Scan 前缀计算类",
+                         "copy_cast_layout": "Copy/Cast/Layout 转换类",
+                         "matmul_cube_basic": "MatMul/Cube 基础检查",
+                         "generic": "通用基础检查（不确定时选这个）",
+                     }},
+                    {"key": "strict_tiling", "label": "我想严格检查 tiling 字段是否足够描述 block/tile 切分",
+                     "type": "check", "default": True, "option": " --strict-tiling"},
+                ],
+            },
+            {
                 "name": "构建 OPP 工程 — Release（安装/验证）",
                 "target": "board",
                 "desc": "切到 Release 编译，生成用于安装、自测、普通 msOpST 验证的 custom_opp_ubuntu_aarch64.run。",
@@ -498,7 +559,7 @@ TOOLS = [
                 ),
                 "fields": [
                     {"type": "note",
-                     "text": "Release 是默认的交付/验证模式：包更小、运行更贴近日常验证，但 kernel .o 通常没有调试信息，不能拿来做 msOpGen sim 的源码行映射。"},
+                     "text": "Release 是默认的交付/验证模式：包更小、运行更贴近日常验证，但 kernel .o 通常没有调试信息，不能拿来做 msOpGen sim 的源码行映射。注意：如果工程只是刚用 msopgen gen 生成的骨架，还没有补 kernel/tiling/host 实现，请先写代码再构建。"},
                     {"key": "project", "label": "OPP 工程目录", "type": "text",
                      "default": "/home/HwHiAiUser/work/rgb_to_gray_gen"},
                 ],
@@ -518,7 +579,7 @@ TOOLS = [
                 ),
                 "fields": [
                     {"type": "note",
-                     "text": "Debug 是仿真/调试模式：后面做 msOpGen sim 的 -reloc 时，要选 build_out/op_kernel/binary/... 下面的 Debug kernel .o，不要选 run/out/main。若仍提示没有 debug info，再检查 op_kernel/CMakeLists.txt 是否需要按官方说明额外加 -g。"},
+                     "text": "Debug 是仿真/调试模式：后面做 msOpGen sim 的 -reloc 时，要选 build_out/op_kernel/binary/... 下面的 Debug kernel .o，不要选 run/out/main。若仍提示没有 debug info，再检查 op_kernel/CMakeLists.txt 是否需要按官方说明额外加 -g。注意：Debug 也不能替代手写实现；刚 gen 出来的骨架仍要先补 kernel/tiling/host 代码。"},
                     {"key": "project", "label": "OPP 工程目录", "type": "text",
                      "default": "/home/HwHiAiUser/work/rgb_to_gray_gen"},
                 ],
@@ -526,11 +587,11 @@ TOOLS = [
             {
                 "name": "官方 compile 入口（备用校验，不是 Debug 模式）",
                 "target": "board",
-                "desc": "使用 msOpGen 的 compile 子命令校验工程；当前主路线优先用上面的 Release/Debug build.sh 入口。",
+                "desc": "调用 msopgen compile 对工程进行官方编译校验。该入口用于备用排查，不负责切换 Release/Debug 构建模式。",
                 "template": "{cann_env} && msopgen compile -i {project} -c {cann_path_arg}{options}",
                 "fields": [
                     {"type": "note",
-                     "text": "这个入口不是 Debug/Release 切换按钮，只是官方 compile 子命令的备用校验。你截图里的 read permission 报错来自 -c 指向 CANN 安装目录的权限检查；做 Debug 仿真请优先点上面的“构建 OPP 工程 — Debug（仿真/源码映射）”。"},
+                     "text": "适用范围：备用编译校验或对照官方 compile 子命令行为。常规安装验证请优先使用 Release 构建；需要 msOpGen sim -reloc 源码/指令映射时，请使用 Debug 构建。若这里提示 CANN 安装路径 read permission，请检查 -c 指向的 CANN 路径是否可读，或改用上方 build.sh 构建入口。"},
                     {"key": "project", "label": "OPP 工程目录", "type": "text",
                      "default": "/home/HwHiAiUser/work/add_custom_opgen_v1"},
                     {"key": "cann_path_arg", "label": "CANN 安装路径", "type": "text",
@@ -2343,6 +2404,7 @@ class CANNToolbox:
                         default = default.format(**self._template_values())
                     except KeyError:
                         pass
+                default = _combo_display_value(f, default)
                 var = tk.StringVar(value=default)
             var.trace_add("write", lambda *_: self._refresh_cmd())
             self._field_vars[f["key"]] = var
@@ -2364,7 +2426,7 @@ class CANNToolbox:
             if f["type"] == "combo":
                 ttk.Combobox(
                     self._fields_frame, textvariable=var,
-                    values=f["options"], width=50,
+                    values=_combo_display_options(f), width=50,
                 ).grid(row=i, column=1, columnspan=2,
                        padx=4, pady=3, sticky="ew")
             elif f["type"] in ("file", "dir"):
@@ -2739,6 +2801,10 @@ class CANNToolbox:
             return
         tmpl = self._current.get("template", "")
         values = {k: v.get() for k, v in self._field_vars.items()}
+        for f in self._field_defs:
+            key = f.get("key")
+            if key in values:
+                values[key] = _combo_emit_value(f, values[key])
         values.update(self._template_values())
         values = self._expand_field_values(values)
         metrics = []
