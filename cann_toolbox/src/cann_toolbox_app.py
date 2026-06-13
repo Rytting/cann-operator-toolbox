@@ -456,7 +456,7 @@ TOOLS = [
                     {"type": "note",
                      "text": "如果能看到非 0 字节的 core0.veccore0.instr_popped_log.dump，就可以去“msOpGen sim 转时间线”选对应 OPPROF 的 device0/tmp_dump。"},
                     {"key": "sim_dir", "label": "仿真输出根目录", "type": "text",
-                     "default": "/home/HwHiAiUser/sim_out_toolbox", "remote": True},
+                     "default": "{board_home}/sim_out_toolbox", "remote": True},
                 ],
             },
         ],
@@ -503,7 +503,7 @@ TOOLS = [
                     {"key": "pick_op", "label": "JSON 里有多个算子，我只生成某一个", "type": "check",
                      "default": False},
                     {"key": "op_type", "label": "算子类型名", "type": "text",
-                     "default": "AddCustom", "enabled_by": "pick_op", "option": "-op {op_type}"},
+                     "default": "{op_name}", "enabled_by": "pick_op", "option": "-op {op_type}"},
                 ],
             },
             {
@@ -561,7 +561,7 @@ TOOLS = [
                     {"type": "note",
                      "text": "Release 是默认的交付/验证模式：包更小、运行更贴近日常验证，但 kernel .o 通常没有调试信息，不能拿来做 msOpGen sim 的源码行映射。注意：如果工程只是刚用 msopgen gen 生成的骨架，还没有补 kernel/tiling/host 实现，请先写代码再构建。"},
                     {"key": "project", "label": "OPP 工程目录", "type": "text",
-                     "default": "/home/HwHiAiUser/work/rgb_to_gray_gen"},
+                     "default": "{board_home}/work/{op_name}_gen"},
                 ],
             },
             {
@@ -581,7 +581,7 @@ TOOLS = [
                     {"type": "note",
                      "text": "Debug 是仿真/调试模式：后面做 msOpGen sim 的 -reloc 时，要选 build_out/op_kernel/binary/... 下面的 Debug kernel .o，不要选 run/out/main。若仍提示没有 debug info，再检查 op_kernel/CMakeLists.txt 是否需要按官方说明额外加 -g。注意：Debug 也不能替代手写实现；刚 gen 出来的骨架仍要先补 kernel/tiling/host 代码。"},
                     {"key": "project", "label": "OPP 工程目录", "type": "text",
-                     "default": "/home/HwHiAiUser/work/rgb_to_gray_gen"},
+                     "default": "{board_home}/work/{op_name}_gen"},
                 ],
             },
             {
@@ -593,7 +593,7 @@ TOOLS = [
                     {"type": "note",
                      "text": "适用范围：备用编译校验或对照官方 compile 子命令行为。常规安装验证请优先使用 Release 构建；需要 msOpGen sim -reloc 源码/指令映射时，请使用 Debug 构建。若这里提示 CANN 安装路径 read permission，请检查 -c 指向的 CANN 路径是否可读，或改用上方 build.sh 构建入口。"},
                     {"key": "project", "label": "OPP 工程目录", "type": "text",
-                     "default": "/home/HwHiAiUser/work/add_custom_opgen_v1"},
+                     "default": "{board_home}/work/{op_name}_gen"},
                     {"key": "cann_path_arg", "label": "CANN 安装路径", "type": "text",
                      "default": "{cann_path}", "required": True},
                     {"key": "quiet", "label": "我想跳过交互询问", "type": "check",
@@ -609,7 +609,7 @@ TOOLS = [
                     {"type": "note",
                      "text": "安装目录可以直接输入一个不存在的新目录，安装脚本会创建它。建议不同算子/不同模式分开，例如 /home/HwHiAiUser/custom_opp_rgb_debug，避免和 AddCustom 旧包混在一起。"},
                     {"key": "build_out", "label": "build_out 目录", "type": "text",
-                     "default": "/home/HwHiAiUser/work/add_custom_opgen_v1/build_out"},
+                     "default": "{board_home}/work/{op_name}_gen/build_out"},
                     {"key": "run_pkg", "label": ".run 包名", "type": "text",
                      "default": "custom_opp_ubuntu_aarch64.run"},
                     {"key": "install_dir", "label": "安装目录", "type": "text",
@@ -630,9 +630,9 @@ TOOLS = [
                     {"type": "note",
                      "text": "create 是从 op_host/*.cpp 生成 case 骨架。官方的 -q 静默模式必须配合 -m 模型文件使用；没有模型时勾静默会报错，所以这里自动绑定。"},
                     {"key": "workdir", "label": "板端工作目录", "type": "text",
-                     "default": "/home/HwHiAiUser/work/msopst_create_run_addcustom_20260608_official"},
+                     "default": "{board_home}/work/{op_name}_st"},
                     {"key": "op_host_cpp", "label": "op_host cpp 路径", "type": "text",
-                     "default": "/home/HwHiAiUser/work/add_custom_opgen_v1/op_host/add_custom.cpp"},
+                     "default": "{board_home}/work/{op_name}_gen/op_host"},
                     {"key": "output_dir", "label": "输出目录", "type": "text",
                      "default": "./create_out"},
                     {"key": "src_opp", "label": "create 前先加载自定义 OPP 运行环境（source + export，算子已编译安装后勾选，省去手动补这几行）", "type": "check",
@@ -665,7 +665,7 @@ TOOLS = [
                     {"type": "note",
                      "text": "run 是我们现在最稳的功能测试入口。310B 板端这里写 Ascend310B1；需要失败 diff、指定 case、设备号、误差阈值或高级配置时，直接勾需求即可。"},
                     {"key": "workdir", "label": "板端工作目录", "type": "text",
-                     "default": "/home/HwHiAiUser/work/msopst_opgen_v1_test"},
+                     "default": "{board_home}/work/{op_name}_st"},
                     {"key": "opp_dir", "label": "自定义 OPP 安装目录", "type": "text",
                      "default": "{custom_opp_opgen}"},
                     {"key": "case_json", "label": "case JSON", "type": "text",
@@ -705,7 +705,7 @@ TOOLS = [
                     {"type": "note",
                      "text": "为什么只探路：ascendc_test 不是完整 OPP 工程验证，也不做 golden 自动比对；它生成的是调用 Ascend C kernel 的测试脚手架。官方限制里明确不支持 addr/tiling 参数，我们的工程化 kernel 若带 workspace/tiling 需要改包装函数甚至砍参数。CANN 8.5 生成器还对 C++ 排版很敏感：kernel 签名跨行会被截断，参数要写成 uint8_t* x 这种“星号贴类型”的形式。生成的 main.cpp 里 blockDim 也写死为 1，所以不能用来证明多 block/切分策略。功能验证请优先走 create + case JSON + run。"},
                     {"key": "workdir", "label": "板端工作目录", "type": "text",
-                     "default": "/home/HwHiAiUser/work/msopst_addcustom_probe_20260607"},
+                     "default": "{board_home}/work/{op_name}_st"},
                     {"key": "case_json", "label": "case JSON", "type": "text",
                      "default": "./addcustom_case.json"},
                     {"key": "kernel_cpp", "label": "核函数包装 cpp", "type": "text",
@@ -734,13 +734,13 @@ TOOLS = [
                     {"type": "note",
                      "text": "这页按“想分析什么”来勾：Roofline 瓶颈分析图、计算内存热力图、缓存热力图、通算流水图、内存通路吞吐率波形图，对应的采集指标由工具箱自动拼到命令里。需要只采某个核函数或排除预热影响时，再勾下面的过滤项。"},
                     {"key": "workdir", "label": "板端工作目录", "type": "text",
-                     "default": "/home/HwHiAiUser/work/msopst_opgen_v1_test/run_out/20260609033550/AddCustom/run/out"},
+                     "default": "{board_home}/work/{op_name}_st/run_out"},
                     {"key": "opp_dir", "label": "自定义 OPP 安装目录", "type": "text",
                      "default": "{custom_opp_dim8_g}"},
                     {"key": "app", "label": "可执行文件", "type": "text",
                      "default": "./main"},
                     {"key": "output", "label": "输出目录（建议 home 下）", "type": "text",
-                     "default": "/home/HwHiAiUser/prof_add_toolbox"},
+                     "default": "{board_home}/prof_add_toolbox"},
                     {"key": "metric_pipe", "label": "我要看通算流水图和各流水单元占用", "type": "check",
                      "default": True, "metric": "PipeUtilization"},
                     {"key": "metric_arith", "label": "我要看计算侧数据，用于计算内存热力图和 Roofline 瓶颈分析图", "type": "check",
@@ -762,7 +762,7 @@ TOOLS = [
                     {"key": "filter_kernel", "label": "我只想采某个核函数", "type": "check",
                      "default": False},
                     {"key": "kernel_name", "label": "核函数名称", "type": "text",
-                     "default": "AddCustom", "enabled_by": "filter_kernel", "option": "--kernel-name={kernel_name}"},
+                     "default": "{op_name}", "enabled_by": "filter_kernel", "option": "--kernel-name={kernel_name}"},
                     {"key": "limit_launch", "label": "我想限制采集启动次数", "type": "check",
                      "default": False},
                     {"key": "launch_count", "label": "采集次数", "type": "text",
@@ -799,13 +799,13 @@ TOOLS = [
                     {"type": "note",
                      "text": "这是 4.1 用过的粗粒度路线，重点看 AI Core 任务总时长、block_dim 等 sqlite 汇总；不适合替代 op 模式里的通算流水、内存通路和 Roofline 细分析。"},
                     {"key": "workdir", "label": "板端工作目录", "type": "text",
-                     "default": "/home/HwHiAiUser/work/acl_online_addcustom_verify"},
+                     "default": "{board_home}/work/acl_online_addcustom_verify"},
                     {"key": "opp_dir", "label": "自定义 OPP 安装目录", "type": "text",
                      "default": "{custom_opp_addcustom_cann85}"},
                     {"key": "app", "label": "运行命令/脚本", "type": "text",
                      "default": "./run.sh 0"},
                     {"key": "output", "label": "输出目录", "type": "text",
-                     "default": "/home/HwHiAiUser/prof_db_toolbox"},
+                     "default": "{board_home}/prof_db_toolbox"},
                 ],
             },
             {
@@ -817,7 +817,7 @@ TOOLS = [
                     {"type": "note",
                      "text": "如果传统 db 目录里没有导出的 sqlite/CSV，就对同一个 output 目录跑这个按钮。注意这里不是重新采集，只是导出。"},
                     {"key": "output", "label": "已有 profiling 输出目录", "type": "text",
-                     "default": "/home/HwHiAiUser/prof_db_toolbox"},
+                     "default": "{board_home}/prof_db_toolbox"},
                 ],
             },
             {
@@ -834,14 +834,14 @@ TOOLS = [
                     {"type": "note",
                      "text": "软件仿真适合看指令流水图，不代表真实 310B4 绝对性能。生成仿真数据后，再用 msOpGen sim 转成可视化时间线。"},
                     {"key": "workdir", "label": "main 所在目录", "type": "text",
-                     "default": "/home/HwHiAiUser/work/msopst_rsc_test/run_out_debug/20260609061927/ReduceSumCustom/run/out"},
+                     "default": "{board_home}/work/{op_name}_st/run_out"},
                     {"key": "app", "label": "可执行文件", "type": "text",
                      "default": "./main"},
                     {"key": "soc", "label": "仿真 SOC", "type": "combo",
                      "default": "Ascend310B1", "options": ["Ascend310B1", "Ascend310B4", "Ascend910B1"],
                      "required": True},
                     {"key": "output", "label": "仿真输出目录", "type": "text",
-                     "default": "/home/HwHiAiUser/sim_out_toolbox"},
+                     "default": "{board_home}/sim_out_toolbox"},
                     {"key": "need_dump", "label": "我要生成仿真数据，供 msOpGen sim 转可视化时间线", "type": "check",
                      "default": True, "option": "--dump=on"},
                 ],
@@ -859,7 +859,7 @@ TOOLS = [
                     {"type": "note",
                      "text": "源码参数表确认必填 core、dump-dir、output；我们板子上优先选 simulator 生成的 device0/tmp_dump 目录。310B 矢量算子优先用 veccore0。普通时间线可以不勾 -reloc；如果要关联源码/指令位置，必须先 Debug 编译，再选 build_out/op_kernel/binary/... 里的 kernel .o，不能选 run/out/main 或 ./main。"},
                     {"key": "dump_dir", "label": "仿真数据目录", "type": "text",
-                     "default": "/home/HwHiAiUser/sim_out_toolbox/OPPROF_xxx/device0/tmp_dump"},
+                     "default": "{board_home}/sim_out_toolbox/OPPROF_xxx/device0/tmp_dump"},
                     {"key": "core", "label": "AI Core 编号", "type": "combo",
                      "default": "core0", "options": ["core0", "core1", "core2", "core3"]},
                     {"key": "use_subcore", "label": "我需要指定子核/向量核（310B 默认需要）", "type": "check",
@@ -872,11 +872,11 @@ TOOLS = [
                     {"key": "use_reloc", "label": "我已经 Debug 编译，并且想用 kernel .o 关联源码/指令位置", "type": "check",
                      "default": False},
                     {"key": "relocatable_file", "label": "Debug kernel .o（板端绝对路径）", "type": "text",
-                     "default": "/home/HwHiAiUser/work/rgb_to_gray_gen/build_out/op_kernel/binary/ascend310b/rgb_to_gray_custom/RgbToGrayCustom_95ad72606637cc6014ec58666087e716.o",
+                     "default": "{board_home}/work/{op_name}_gen/build_out/op_kernel/binary/ascend310b",
                      "enabled_by": "use_reloc", "option": "-reloc {relocatable_file}", "remote": True,
                      "required": True},
                     {"key": "output", "label": "时间线输出目录", "type": "text",
-                     "default": "/home/HwHiAiUser/trace_out_toolbox"},
+                     "default": "{board_home}/trace_out_toolbox"},
                 ],
             },
         ],
@@ -896,7 +896,7 @@ TOOLS = [
                 ),
                 "fields": [
                     {"key": "script", "label": "板端 KPP 脚本", "type": "text",
-                     "default": "/home/HwHiAiUser/work/rgb_to_gray_kpp.py"},
+                     "default": "{board_home}/work/{op_name}_kpp.py"},
                     {"key": "outdir", "label": "KPP 输出目录", "type": "text",
                      "default": "{kpp_out}"},
                 ],
@@ -1065,7 +1065,7 @@ TOOLS = [
                     {"key": "script", "label": "摘要脚本", "type": "file",
                      "default": "{workspace}/agent_tools/profiling_sqlite_summary.py"},
                     {"key": "profile", "label": "profiling tar/sqlite/目录", "type": "file",
-                     "default": f"{LOCAL_ROOT}/4.算子实现-矢量编程/4.1profiling/add_perf_orig_100_20260605155505.tar.gz"},
+                     "default": ""},
                 ],
             },
         ],
@@ -1092,7 +1092,7 @@ TOOLS = [
                     {"type": "note",
                      "text": "注意：这块仍在探索，不是稳定教程。当前按钮只是按官方 msSanitizer 功能给出命令行入口；我们已确认工具能启动并包住 runner，但还没结案证明 msOpGen binary kernel 的 -g/-sanitizer 插桩链路稳定生效。若没报错，不代表算子一定没有越界/竞争；可能只是当前 OPP 没带插桩。只是想查语法时，请用 build.sh 或 msopgen compile。"},
                     {"key": "workdir", "label": "runner 所在目录", "type": "text",
-                     "default": "/home/HwHiAiUser/work/msopst_opgen_v1_test/run_out/20260609033550/AddCustom/run/out"},
+                     "default": "{board_home}/work/{op_name}_st/run_out"},
                     {"key": "opp_dir", "label": "自定义 OPP 安装目录", "type": "text",
                      "default": "{custom_opp_opgen}"},
                     {"key": "check_type", "label": "我要检查的问题类型", "type": "combo",
@@ -1100,7 +1100,7 @@ TOOLS = [
                     {"key": "filter_kernel", "label": "我只想检查某个核函数", "type": "check",
                      "default": True},
                     {"key": "kernel_name", "label": "核函数名称", "type": "text",
-                     "default": "AddCustom", "enabled_by": "filter_kernel", "option": "--kernel-name={kernel_name}"},
+                     "default": "{op_name}", "enabled_by": "filter_kernel", "option": "--kernel-name={kernel_name}"},
                     {"key": "app", "label": "可执行文件", "type": "text",
                      "default": "./main"},
                 ],
@@ -1129,7 +1129,7 @@ TOOLS = [
                 "template": 'scp -r {board_user}@{board_host}:{remote} "{local}"',
                 "fields": [
                     {"key": "remote", "label": "板端路径", "type": "text",
-                     "default": "/home/HwHiAiUser/prof_add_toolbox/"},
+                     "default": "{board_home}/prof_add_toolbox/"},
                     {"key": "local", "label": "本地保存到", "type": "dir",
                      "default": f"{LOCAL_ROOT}/官方算子开发工具/msProf/AddCustom实测/"},
                 ],
@@ -1905,6 +1905,26 @@ class CANNToolbox:
 
         ttk.Separator(self.root).pack(fill=tk.X, padx=10, pady=5)
 
+        # 项目栏：在最上面设一次「算子名 / 板端家目录」，下面各工具的默认路径自动套用，
+        # 省得每一步都重新找路径。默认值解析后与旧版完全一致，只是变得可一键搬家。
+        proj = ttk.Frame(self.root)
+        proj.pack(fill=tk.X, padx=10, pady=(0, 4))
+        paths_cfg = self._config.get("paths", {})
+        ttk.Label(proj, text="项目", font=FONT_UI_BOLD).pack(side=tk.LEFT, padx=(0, 8))
+        ttk.Label(proj, text="算子名").pack(side=tk.LEFT, padx=(0, 2))
+        self._proj_op_var = tk.StringVar(value=paths_cfg.get("op_name", "AddCustom"))
+        ttk.Entry(proj, textvariable=self._proj_op_var, width=16).pack(side=tk.LEFT, padx=(0, 10))
+        ttk.Label(proj, text="板端家目录").pack(side=tk.LEFT, padx=(0, 2))
+        self._proj_home_var = tk.StringVar(
+            value=paths_cfg.get("board_home", "/home/HwHiAiUser"))
+        ttk.Entry(proj, textvariable=self._proj_home_var, width=24).pack(side=tk.LEFT, padx=(0, 10))
+        ttk.Button(proj, text="↻ 套用到本页路径", width=15,
+                   command=self._reapply_project_vars).pack(side=tk.LEFT, padx=(0, 6))
+        ttk.Label(proj, text="（设一次，后面各步默认路径自动用 {op_name}/{board_home}）",
+                  foreground="gray").pack(side=tk.LEFT)
+        for var in (self._proj_op_var, self._proj_home_var):
+            var.trace_add("write", lambda *_: self._refresh_cmd())
+
         # 底部按钮栏：先于主区域打包并钉在底部，窗口不够高时被压缩的是主区域而不是按钮
         btns = ttk.Frame(self.root)
         btns.pack(side=tk.BOTTOM, fill=tk.X, padx=10, pady=(0, 8))
@@ -1956,10 +1976,32 @@ class CANNToolbox:
         self._desc.pack(side=tk.LEFT, fill=tk.X, expand=True)
         desc_row.bind("<Configure>", self._on_desc_row_configure)
 
-        self._fields_outer = ttk.LabelFrame(right, text="参数")
+        # 问题摘要：先用 side=BOTTOM 占住最底部的固定细条。必须先于下面的可拖区域
+        # 打包，否则中间那块 expand=True 会把空间吃光、摘要被挤成 0 高。
+        self._summary_lf = ttk.LabelFrame(right, text="问题摘要")
+        self._summary_lf.pack(side=tk.BOTTOM, fill=tk.X, pady=(0, 4))
+        self._summary = scrolledtext.ScrolledText(
+            self._summary_lf, height=3, wrap=tk.WORD,
+            font=FONT_UI, relief="flat",
+            bg="#fff8e1", fg="#333333",
+            padx=8, pady=6)
+        self._summary.pack(fill=tk.X, padx=4, pady=4)
+        self._summary.insert(tk.END, "命令结束后会在这里提取关键报错和可能原因。\n")
+        self._summary.config(state="disabled")
+
+        # 纵向可拖分隔条：上半=参数表单(+生成的命令)，下半=执行输出。
+        # 中间那条 sash 可用鼠标上下拖动，自由分配两边高度——不再是只能整块折叠的两态切换。
+        self._vpaned = ttk.PanedWindow(right, orient=tk.VERTICAL)
+        self._vpaned.pack(side=tk.TOP, fill=tk.BOTH, expand=True, pady=(0, 4))
+
+        # —— 上半 pane：参数表单 + 生成的命令 ——
+        top_pane = ttk.Frame(self._vpaned)
+        self._vpaned.add(top_pane, weight=2)
+
+        self._fields_outer = ttk.LabelFrame(top_pane, text="参数")
         self._fields_outer.pack(fill=tk.BOTH, expand=True, pady=(0, 4))
         self._fields_canvas = tk.Canvas(
-            self._fields_outer, height=200, highlightthickness=0)
+            self._fields_outer, height=170, highlightthickness=0)
         fields_vsb = ttk.Scrollbar(
             self._fields_outer, orient="vertical",
             command=self._fields_canvas.yview)
@@ -1974,7 +2016,7 @@ class CANNToolbox:
         self._fields_canvas.bind("<Enter>", self._bind_fields_mousewheel)
         self._fields_canvas.bind("<Leave>", self._unbind_fields_mousewheel)
 
-        cmd_bar = ttk.Frame(right)
+        cmd_bar = ttk.Frame(top_pane)
         cmd_bar.pack(fill=tk.X, pady=(0, 2))
         ttk.Label(cmd_bar, text="生成的命令（可手动修改）",
                   font=FONT_UI_BOLD).pack(side=tk.LEFT)
@@ -1984,7 +2026,7 @@ class CANNToolbox:
         self._cmd_toggle_btn.pack(side=tk.RIGHT)
         self._cmd_visible = True
 
-        self._cmd_lf = ttk.LabelFrame(right, text="")
+        self._cmd_lf = ttk.LabelFrame(top_pane, text="")
         self._cmd_lf.pack(fill=tk.X, pady=(0, 4))
         self._cmd = tk.Text(
             self._cmd_lf, height=4, wrap=tk.WORD,
@@ -1992,7 +2034,11 @@ class CANNToolbox:
             padx=8, pady=6)
         self._cmd.pack(fill=tk.X, padx=4, pady=4)
 
-        out_bar = ttk.Frame(right)
+        # —— 下半 pane：执行输出（默认占大头，可往上拖得更大）——
+        bot_pane = ttk.Frame(self._vpaned)
+        self._vpaned.add(bot_pane, weight=5)
+
+        out_bar = ttk.Frame(bot_pane)
         out_bar.pack(fill=tk.X, pady=(0, 2))
         ttk.Label(out_bar, text="执行输出", font=FONT_UI_BOLD).pack(side=tk.LEFT)
         ttk.Button(
@@ -2004,27 +2050,16 @@ class CANNToolbox:
         self._output_toggle_btn.pack(side=tk.RIGHT)
         self._output_visible = True
 
-        self._output_lf = ttk.LabelFrame(right, text="")
+        self._output_lf = ttk.LabelFrame(bot_pane, text="")
         self._output_lf.pack(fill=tk.BOTH, expand=True, pady=(0, 4))
         self._output = scrolledtext.ScrolledText(
-            self._output_lf, height=5, wrap=tk.WORD,
+            self._output_lf, height=10, wrap=tk.WORD,
             font=FONT_MONO_SMALL, relief="flat",
             bg="#1e1e1e", fg="#d4d4d4", insertbackground="white",
             padx=8, pady=6)
         self._output.pack(fill=tk.BOTH, expand=True, padx=4, pady=4)
         self._output.insert(tk.END, "输出将显示在这里...\n")
         self._output.config(state="disabled")
-
-        self._summary_lf = ttk.LabelFrame(right, text="问题摘要")
-        self._summary_lf.pack(fill=tk.X, pady=(0, 4))
-        self._summary = scrolledtext.ScrolledText(
-            self._summary_lf, height=3, wrap=tk.WORD,
-            font=FONT_UI, relief="flat",
-            bg="#fff8e1", fg="#333333",
-            padx=8, pady=6)
-        self._summary.pack(fill=tk.X, padx=4, pady=4)
-        self._summary.insert(tk.END, "命令结束后会在这里提取关键报错和可能原因。\n")
-        self._summary.config(state="disabled")
 
     # ── SSH 连接管理 ──────────────────────────────────────────────────────────
 
@@ -2058,7 +2093,26 @@ class CANNToolbox:
             "timestamp": datetime.now().strftime("%Y%m%d_%H%M%S"),
         }
         values.update(self._config.get("paths", {}))
+        # 顶部项目变量：当前输入框优先于已保存的 paths 配置，缺省回退到老路径，
+        # 这样默认值解析结果与旧版一致，只是变成可一键搬家。
+        if hasattr(self, "_proj_op_var"):
+            op = self._proj_op_var.get().strip()
+            if op:
+                values["op_name"] = op
+        if hasattr(self, "_proj_home_var"):
+            home = self._proj_home_var.get().strip().rstrip("/")
+            if home:
+                values["board_home"] = home
+        values.setdefault("op_name", "AddCustom")
+        values.setdefault("board_home", "/home/HwHiAiUser")
         return values
+
+    def _reapply_project_vars(self):
+        # 改了项目变量后，把当前工具页的默认路径按新变量重新铺一遍。
+        # 注意：这会用默认值覆盖本页手填内容，所以只在用户主动点按钮时执行。
+        if self._current is not None:
+            self._on_select(None)
+        self._refresh_cmd()
 
     def _expand_field_values(self, values):
         expanded = dict(values)
@@ -2094,6 +2148,11 @@ class CANNToolbox:
         if not board["host"] or not board["user"]:
             self._flash("IP 和用户名不能为空", "red")
             return
+        proj_paths = {}
+        if hasattr(self, "_proj_op_var"):
+            proj_paths["op_name"] = self._proj_op_var.get().strip()
+        if hasattr(self, "_proj_home_var"):
+            proj_paths["board_home"] = self._proj_home_var.get().strip().rstrip("/")
         self._config = _deep_merge(self._config, {
             "board": {
                 "host": board["host"],
@@ -2102,11 +2161,12 @@ class CANNToolbox:
                 "password": board["password"] if board["remember_password"] else "",
                 "remember_password": board["remember_password"],
                 "default_remote_dir": board["default_remote_dir"],
-            }
+            },
+            "paths": proj_paths,
         })
         try:
             save_toolbox_config(self._config)
-            self._flash("✓ 已保存连接配置（不保存密码）", "green")
+            self._flash("✓ 已保存连接配置 + 项目变量（不保存密码）", "green")
             self._refresh_cmd()
         except Exception as e:
             self._flash(f"保存失败：{e}", "red")

@@ -54,6 +54,32 @@
       }
     },
     {
+      "id": "mskpp.kpp_report",
+      "name": "KPP 输出解读（瓶颈/搬运还是计算受限）",
+      "group": "msKPP / 结果整理",
+      "type": "report",
+      "description": "接在“运行 KPP 脚本”后面用：读取 KPP 输出目录里的 Pipe_statistic.csv / Instruction_statistic.csv（含 trace.json 带宽），自动判出瓶颈在哪条 pipe、是 memory-bound 还是 compute-bound、读写带宽是否对称、双缓冲收益上限，省得每个算子都手动加 cycle 算带宽。注意：910B1 建模，310B4 只看相对趋势。",
+      "script": "{workspace}/官方算子开发工具/msKPP/tools/kpp_report.py",
+      "input": {
+        "kind": "dir",
+        "label": "KPP 输出目录",
+        "required_files_any": ["Pipe_statistic.csv"]
+      },
+      "output": {
+        "kind": "file",
+        "label": "解读 markdown（可选）",
+        "default": "{input}/KPP解读.md",
+        "extensions": [".md"]
+      },
+      "command_template": "\"{python}\" \"{script}\" \"{input}\" --md \"{output}\"",
+      "requirements": [],
+      "after_success": {
+        "show_output_path": true,
+        "offer_open_file": true,
+        "offer_open_folder": true
+      }
+    },
+    {
       "id": "msprof.roofline_plot",
       "name": "Roofline 单目录画图（Memory/Arithmetic CSV）",
       "group": "msProf / 结果整理",

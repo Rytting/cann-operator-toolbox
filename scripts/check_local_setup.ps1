@@ -128,6 +128,52 @@ function Test-PythonPackages {
     }
 }
 
+function Test-SshBanner {
+    # Real proof the board is there: a genuine SSH server greets us with an
+    # "SSH-..." banner the instant we connect. A proxy/VPN in TUN mode (e.g. clash/
+    # Mihomo on 198.18.x.x) can complete the TCP handshake yet cannot speak SSH, so
+    # it returns HTTP, nothing, or times out. We only trust an "SSH-" banner.
+    param(
+        [string]$TargetIP,
+        [int]$Port,
+        [int]$TimeoutMs = 3000
+    )
+
+    $client = New-Object System.Net.Sockets.TcpClient
+    try {
+        $iar = $client.BeginConnect($TargetIP, $Port, $null, $null)
+        if (-not $iar.AsyncWaitHandle.WaitOne($TimeoutMs)) {
+            return [pscustomobject]@{ Result = "NO_CONNECT"; Banner = ""; Source = "" }
+        }
+        $client.EndConnect($iar)
+        $source = ""
+        try { $source = $client.Client.LocalEndPoint.Address.ToString() } catch {}
+
+        $client.ReceiveTimeout = $TimeoutMs
+        $stream = $client.GetStream()
+        $buf = New-Object byte[] 256
+        try {
+            $n = $stream.Read($buf, 0, 256)
+        } catch {
+            return [pscustomobject]@{ Result = "NO_BANNER"; Banner = ""; Source = $source }
+        }
+        if ($n -le 0) {
+            return [pscustomobject]@{ Result = "NO_BANNER"; Banner = ""; Source = $source }
+        }
+        $text = [System.Text.Encoding]::ASCII.GetString($buf, 0, $n).Trim()
+        if ($text -like "SSH-*") {
+            $line = ($text -split "`n")[0].Trim()
+            return [pscustomobject]@{ Result = "SSH"; Banner = $line; Source = $source }
+        }
+        $line = ($text -split "`n")[0].Trim()
+        return [pscustomobject]@{ Result = "NOT_SSH"; Banner = $line; Source = $source }
+    } catch {
+        return [pscustomobject]@{ Result = "NO_CONNECT"; Banner = ""; Source = "" }
+    } finally {
+        $client.Close()
+    }
+}
+
 function Show-NetworkInfo {
     param([string]$TargetIP)
 
@@ -171,16 +217,34 @@ function Show-NetworkInfo {
         Write-WarnLine "Ping to $TargetIP failed. ICMP may be blocked; the SSH port check below is more important."
     }
 
-    $tnc = Get-Command Test-NetConnection -ErrorAction SilentlyContinue
-    if ($tnc) {
-        $portResult = Test-NetConnection -ComputerName $TargetIP -Port $BoardPort -WarningAction SilentlyContinue
-        if ($portResult.TcpTestSucceeded) {
-            Write-Ok "TCP port $BoardPort is open on $TargetIP. SSH is likely reachable."
-        } else {
-            Write-WarnLine "TCP port $BoardPort is not reachable on $TargetIP."
+    # A bare TCP handshake is NOT proof: a proxy/VPN can fake it. We connect and
+    # read the SSH banner instead, and only trust an "SSH-..." greeting.
+    Write-Host ""
+    Write-Host "Verifying real SSH server on port $BoardPort (reading banner, not just TCP handshake)..."
+    $ssh = Test-SshBanner -TargetIP $TargetIP -Port $BoardPort
+    switch ($ssh.Result) {
+        "SSH" {
+            Write-Ok "Real SSH server confirmed on $TargetIP`:$BoardPort -> $($ssh.Banner)"
         }
-    } else {
-        Write-WarnLine "Test-NetConnection is unavailable. Skipping TCP port check."
+        "NOT_SSH" {
+            Write-Fail "Port $BoardPort answered, but NOT with SSH: $($ssh.Banner)"
+            Write-Host "       This is usually a proxy/VPN or a different service, NOT the board."
+            if ($ssh.Source -match "^(198\.18\.|198\.19\.|100\.64\.|100\.6[4-9]\.|100\.[7-9]\d\.|100\.1[01]\d\.|100\.12[0-7]\.)") {
+                Write-Host "       Connection left via $($ssh.Source), which looks like a proxy/TUN adapter (clash/Mihomo etc.)."
+            }
+            Write-Host "       Try again with the proxy/VPN turned off, and confirm the board is plugged in."
+        }
+        "NO_BANNER" {
+            Write-Fail "Connected to $TargetIP`:$BoardPort but got no SSH banner (likely a faked handshake)."
+            if ($ssh.Source -match "^(198\.18\.|198\.19\.|100\.64\.|100\.6[4-9]\.|100\.[7-9]\d\.|100\.1[01]\d\.|100\.12[0-7]\.)") {
+                Write-Host "       Connection left via $($ssh.Source), which looks like a proxy/TUN adapter (clash/Mihomo etc.)."
+            }
+            Write-Host "       Turn off any proxy/VPN, confirm the board is on, then run this check again."
+        }
+        default {
+            Write-WarnLine "Could not open a connection to $TargetIP`:$BoardPort."
+            Write-Host "       Check the cable/USB adapter, the board power, and that the IP is correct."
+        }
     }
 }
 
