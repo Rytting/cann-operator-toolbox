@@ -19,10 +19,12 @@ Changes that have been made locally but are not part of a tagged release yet.
 - Chinese quick-start guide for classmates and first-time users, covering download, Python discovery, dependency installation, board IP/user checks, and first connection troubleshooting.
 - Windows setup check script for detecting Python, required Python packages, local network addresses, board ping, SSH port reachability, and the suggested toolbox launch command.
 - OPP project completeness checker after `msopgen gen`, with profile-based checks for vector elementwise, Reduce, Gather/Scatter, Scan, Copy/Cast/Layout, MatMul/Cube, and generic skeletons.
+- Toolbox version marker and a bottom-right update checker that compares the local version with the GitHub release copy.
 
 ### Changed
 
 - The board connection button now stays usable while SSH connection is in progress. Clicking it cancels the pending connection request instead of forcing the user to close the whole toolbox window.
+- The default board home directory can now be selected with the board-side path picker instead of only being typed by hand.
 - The `msopgen gen` flow now calls out that generated projects are only skeletons and must be completed before Release/Debug builds.
 - Combo boxes can now show friendly Chinese labels while still emitting the underlying command-line values.
 
@@ -35,10 +37,12 @@ Changes that have been made locally but are not part of a tagged release yet.
 - 新增同学快速开始文档，说明下载、查找 Python、安装依赖、确认板子 IP/用户名，以及第一次连接失败时的排查步骤。
 - 新增 Windows 本机环境体检脚本，可检测 Python、必要 Python 包、本机网卡地址、板子 ping、SSH 端口连通性，并给出工具箱启动命令。
 - 新增 `msopgen gen` 后的 OPP 工程完整性检查器，可按 Vector 逐元素、Reduce、Gather/Scatter、Scan、Copy/Cast/Layout、MatMul/Cube、通用骨架等范式检查工程是否仍像空壳。
+- 新增工具箱版本标记和右下角检查更新入口，可和 GitHub 发布副本对比本地版本。
 
 ### 调整
 
 - SSH 正在连接时，连接按钮会变成“取消连接”，可以取消本次连接请求，不再需要整个退出工具箱。
+- 默认板端家目录现在可以用板端路径选择器点选，不再只能手动输入。
 - `msopgen gen` 流程现在会明确提示：生成的是工程骨架，必须补完 kernel/host/tiling 后再做 Release 或 Debug 构建。
 - 下拉框支持显示友好的中文选项，同时生成命令时仍使用底层命令行参数。
 

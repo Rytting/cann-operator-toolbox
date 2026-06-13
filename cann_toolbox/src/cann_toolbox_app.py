@@ -10,6 +10,9 @@ import tkinter as tk
 import tkinter.font as tkfont
 from tkinter import filedialog, messagebox, scrolledtext, ttk
 import subprocess
+import urllib.error
+import urllib.request
+import webbrowser
 from pathlib import Path
 from datetime import datetime
 
@@ -25,6 +28,9 @@ CONFIG_DIR = APP_DIR / "config"
 PLUGIN_DIR = APP_DIR / "plugins"
 DEFAULT_CONFIG_PATH = CONFIG_DIR / "default_config.json"
 USER_CONFIG_PATH = CONFIG_DIR / "toolbox_config.json"
+VERSION_PATH = APP_DIR / "VERSION"
+UPDATE_VERSION_URL = "https://raw.githubusercontent.com/Rytting/cann-operator-toolbox/main/cann_toolbox/VERSION"
+PROJECT_URL = "https://github.com/Rytting/cann-operator-toolbox"
 DEFAULT_CONFIG = {
     "board": {
         "host": "192.168.0.2",
@@ -99,6 +105,38 @@ def save_toolbox_config(config):
     }
     with USER_CONFIG_PATH.open("w", encoding="utf-8") as f:
         json.dump(safe_config, f, ensure_ascii=False, indent=2)
+
+
+def read_local_version():
+    try:
+        return VERSION_PATH.read_text(encoding="utf-8").strip() or "dev"
+    except Exception:
+        return "dev"
+
+
+def _version_parts(version):
+    parts = []
+    for part in re.split(r"[.\-+_]", version.strip()):
+        if part.isdigit():
+            parts.append(int(part))
+        elif part:
+            parts.append(part.lower())
+    return parts
+
+
+def compare_versions(left, right):
+    left_parts = _version_parts(left)
+    right_parts = _version_parts(right)
+    max_len = max(len(left_parts), len(right_parts))
+    for i in range(max_len):
+        a = left_parts[i] if i < len(left_parts) else 0
+        b = right_parts[i] if i < len(right_parts) else 0
+        if a == b:
+            continue
+        if isinstance(a, int) and isinstance(b, int):
+            return 1 if a > b else -1
+        return 1 if str(a) > str(b) else -1
+    return 0
 
 
 def config_cann_path(config):
@@ -1824,6 +1862,7 @@ class CANNToolbox:
         self._active_channel = None
         self._running_board_command = False
         self._run_output_chunks = []
+        self._local_version = read_local_version()
         self._build()
 
     def _configure_fonts(self):
@@ -1917,7 +1956,9 @@ class CANNToolbox:
         ttk.Label(proj, text="板端家目录").pack(side=tk.LEFT, padx=(0, 2))
         self._proj_home_var = tk.StringVar(
             value=paths_cfg.get("board_home", "/home/HwHiAiUser"))
-        ttk.Entry(proj, textvariable=self._proj_home_var, width=24).pack(side=tk.LEFT, padx=(0, 10))
+        ttk.Entry(proj, textvariable=self._proj_home_var, width=24).pack(side=tk.LEFT, padx=(0, 4))
+        ttk.Button(proj, text="板端", width=5,
+                   command=self._browse_project_home).pack(side=tk.LEFT, padx=(0, 10))
         ttk.Button(proj, text="↻ 套用到本页路径", width=15,
                    command=self._reapply_project_vars).pack(side=tk.LEFT, padx=(0, 6))
         ttk.Label(proj, text="（设一次，后面各步默认路径自动用 {op_name}/{board_home}）",
@@ -1941,6 +1982,18 @@ class CANNToolbox:
         self._stop_btn.pack(side=tk.LEFT)
         self._status = ttk.Label(btns, text="", foreground="gray")
         self._status.pack(side=tk.LEFT, padx=12)
+        update_box = ttk.Frame(btns)
+        update_box.pack(side=tk.RIGHT)
+        self._update_label = ttk.Label(
+            update_box, text=f"版本 {self._local_version}", foreground="gray")
+        self._update_label.pack(side=tk.LEFT, padx=(0, 6))
+        self._update_btn = ttk.Button(
+            update_box, text="检查更新", width=9,
+            command=self._check_updates)
+        self._update_btn.pack(side=tk.LEFT, padx=(0, 4))
+        ttk.Button(
+            update_box, text="GitHub", width=7,
+            command=self._open_project_page).pack(side=tk.LEFT)
 
         # 主体分栏
         paned = ttk.PanedWindow(self.root, orient=tk.HORIZONTAL)
@@ -2856,6 +2909,19 @@ class CANNToolbox:
             on_select=lambda path: var.set(path),
         )
 
+    def _browse_project_home(self):
+        if not self._ssh:
+            self._flash("请先连接板子，再选择板端家目录", "red")
+            return
+        board = self._current_board_config()
+        start = self._proj_home_var.get().strip() or board["default_remote_dir"]
+        if not start.startswith("/"):
+            start = board["default_remote_dir"]
+        RemotePathPicker(
+            self.root, self._ssh, start, mode="dir",
+            on_select=lambda path: self._proj_home_var.set(path.rstrip("/") or "/"),
+        )
+
     def _refresh_cmd(self):
         if not self._current or self._current.get("builder"):
             return
@@ -3234,6 +3300,58 @@ class CANNToolbox:
         if "warning:" in low:
             return None
         return None
+
+    def _set_update_status(self, text, color="gray", enable=True):
+        self._update_label.config(text=text, foreground=color)
+        self._update_btn.config(state="normal" if enable else "disabled")
+
+    def _check_updates(self):
+        self._set_update_status("正在检查更新...", "#0066cc", enable=False)
+        threading.Thread(target=self._check_updates_worker, daemon=True).start()
+
+    def _check_updates_worker(self):
+        try:
+            req = urllib.request.Request(
+                UPDATE_VERSION_URL,
+                headers={"User-Agent": "cann-operator-toolbox"},
+            )
+            with urllib.request.urlopen(req, timeout=6) as resp:
+                latest = resp.read().decode("utf-8", errors="replace").strip()
+            if not latest:
+                raise ValueError("empty remote version")
+            local = self._local_version
+            cmp_result = compare_versions(local, latest)
+            if cmp_result < 0:
+                text = f"发现新版 {latest}（当前 {local}）"
+                color = "#b26a00"
+            elif cmp_result > 0:
+                text = f"本地版本 {local} 较新"
+                color = "#0066cc"
+            else:
+                text = f"已是最新 {local}"
+                color = "green"
+            self.root.after(0, lambda: self._set_update_status(text, color))
+        except urllib.error.HTTPError as e:
+            if e.code == 404:
+                text = f"远端版本文件未发布（当前 {self._local_version}）"
+            else:
+                text = f"检查更新失败：HTTP {e.code}"
+            self.root.after(0, lambda: self._set_update_status(text, "gray"))
+        except urllib.error.URLError:
+            self.root.after(0, lambda: self._set_update_status(
+                f"网络访问失败（当前 {self._local_version}）", "gray"))
+        except ValueError:
+            self.root.after(0, lambda: self._set_update_status(
+                f"远端版本号为空（当前 {self._local_version}）", "gray"))
+        except Exception:
+            self.root.after(0, lambda: self._set_update_status(
+                f"无法检查更新（当前 {self._local_version}）", "gray"))
+
+    def _open_project_page(self):
+        try:
+            webbrowser.open(PROJECT_URL)
+        except Exception as e:
+            self._flash(f"打开 GitHub 失败：{e}", "red")
 
     def _flash(self, msg, color):
         self._status.config(text=msg, foreground=color)
