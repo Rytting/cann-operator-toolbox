@@ -14,6 +14,8 @@ Changes that have been made locally but are not part of a tagged release yet.
 
 尚未发布成版本的本地改动会先放在这里。
 
+## [0.1.3] - 2026-06-13
+
 ### Added
 
 - Chinese quick-start guide for classmates and first-time users, covering download, Python discovery, dependency installation, board IP/user checks, and first connection troubleshooting.
@@ -21,6 +23,9 @@ Changes that have been made locally but are not part of a tagged release yet.
 - OPP project completeness checker after `msopgen gen`, with profile-based checks for vector elementwise, Reduce, Gather/Scatter, Scan, Copy/Cast/Layout, MatMul/Cube, and generic skeletons.
 - Toolbox version marker and a bottom-right update checker that compares the local version with the GitHub release copy.
 - Semi-automatic update script for classmates: clone-based installs use `git pull`, while ZIP installs download the latest GitHub archive, back up the old directory, and copy the new files.
+- KPP output reader plugin (`kpp_report.py`): reads `Pipe_statistic.csv` / `Instruction_statistic.csv` and prints a one-click verdict — bottleneck pipe, memory-vs-compute bound, read/write bandwidth asymmetry, and double-buffer ROI upper bound.
+- Top "project variables" bar (`op_name` / `board_home`): set the operator name and board home directory once, and tool default paths follow them.
+- `.gitattributes` to normalize line endings (LF for code/JSON/Markdown, CRLF for PowerShell).
 
 ### Changed
 
@@ -29,6 +34,9 @@ Changes that have been made locally but are not part of a tagged release yet.
 - The toolbox bottom bar now includes an update-command button, so users can copy a safe PowerShell update command after a newer version is detected.
 - The `msopgen gen` flow now calls out that generated projects are only skeletons and must be completed before Release/Debug builds.
 - Combo boxes can now show friendly Chinese labels while still emitting the underlying command-line values.
+- Tool default paths are now generic, operator-name-based examples (`{op_name}_gen` / `{op_name}_st`) instead of the author's own experiment directories, so first-time users see self-explanatory placeholders.
+- The parameters and execution-output areas are now a draggable vertical split, so the output pane can be enlarged freely instead of only collapsed/expanded.
+- The setup check now verifies a real SSH banner instead of a bare TCP handshake, so a proxy/VPN can no longer make an absent board look reachable.
 
 ### Fixed
 
@@ -42,6 +50,9 @@ Changes that have been made locally but are not part of a tagged release yet.
 - 新增 `msopgen gen` 后的 OPP 工程完整性检查器，可按 Vector 逐元素、Reduce、Gather/Scatter、Scan、Copy/Cast/Layout、MatMul/Cube、通用骨架等范式检查工程是否仍像空壳。
 - 新增工具箱版本标记和右下角检查更新入口，可和 GitHub 发布副本对比本地版本。
 - 新增半自动更新脚本：Git 克隆版自动 `git pull`，ZIP 解压版自动下载 GitHub 最新压缩包、备份旧目录并覆盖更新。
+- 新增 KPP 输出解读插件（`kpp_report.py`）：读取 `Pipe_statistic.csv` / `Instruction_statistic.csv`，一键判出瓶颈在哪条 pipe、是 memory 还是 compute 受限、读写带宽是否对称、双缓冲收益上限。
+- 新增顶部“项目变量”栏（`op_name` / `board_home`）：算子名和板端家目录设一次，各工具默认路径自动跟随。
+- 新增 `.gitattributes` 统一换行符（代码/JSON/Markdown 用 LF，PowerShell 用 CRLF）。
 
 ### 调整
 
@@ -50,6 +61,9 @@ Changes that have been made locally but are not part of a tagged release yet.
 - 工具箱底部新增“更新命令”按钮，发现新版后可以复制安全的 PowerShell 更新命令。
 - `msopgen gen` 流程现在会明确提示：生成的是工程骨架，必须补完 kernel/host/tiling 后再做 Release 或 Debug 构建。
 - 下拉框支持显示友好的中文选项，同时生成命令时仍使用底层命令行参数。
+- 工具默认路径改为基于算子名的通用示例（`{op_name}_gen` / `{op_name}_st`），不再是作者自己的实验目录，新人一打开看到的是能看懂的占位路径。
+- 参数区与执行输出区之间改成可拖动的纵向分隔条，输出窗口可自由拉大，不再只能整块折叠/展开。
+- 体检脚本改为校验真实 SSH banner，而不是只看 TCP 握手，代理/VPN 不会再把没插的板子误报成可连。
 
 ### 修复
 
